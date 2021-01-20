@@ -1,7 +1,10 @@
+// Settings
+const debounceTime = 200; //ms
+
 // State
 var shiftDown = false;
 var ctrlDown = false;
-
+var lastRequestTime = new Date().getTime();
 var lastCondition = null;
 var lastSearchField = null;
 var lastSuggestions = null;
@@ -40,13 +43,8 @@ var textContainer = document.createElement('div');
 textContainer.style = "padding-top: 10px; color: rgb(15, 20, 25); font-size: 14px; font-weight: bold;  font-family: monospace;";
 advancedSearchSuggestion.appendChild(textContainer);
 
-const debounceTime = 200;
-var lastRequestTime = new Date().getTime();
+
 advancedSearchSuggestion.style = 'display: flex; flex-direction: column; justify-content:left; padding: 15px; border-bottom: solid 1px rgb(235, 238, 240)';
-var autoCompleteAdvId = '___qladv_7331';
-advancedSearchSuggestion.id = autoCompleteAdvId
-
-
 
 async function addAllListeners() {
     var inserted = false;
@@ -161,7 +159,9 @@ chrome.runtime.onMessage.addListener(
 
 
 
-// The search experience, 
+// The search experience
+
+// We hard code the keys since we are to reference them on two places
 const allWordsKey = 'all';
 const anyOfKey = 'anyOf';
 const exactPhraseKey = 'exactPhrase';
@@ -178,6 +178,7 @@ const minimumLikesKey = 'minimumLikes';
 const minimumRepliesKey = 'minimumReplies';
 const minimumRetweetsKey = 'minimumRetweets';
 
+// Some rules about twitter advanced filter
 const maxFieldUsages = {
     [languageKey]: 1,
     [repliesFilterKey]: 1,
@@ -186,15 +187,17 @@ const maxFieldUsages = {
     [minimumRepliesKey]: 1,
     [minimumRetweetsKey]: 1,
 }
-const comparatorReadable = {
-    lte: '≤',
-    lt: '<'
-}
-
+// Some fields should not have <= < comparators allowed
 const fieldInvalidComparators = {
     [minimumLikesKey]: new Set(['lte', 'lt']),
     [minimumRepliesKey]: new Set(['lte', 'lt']),
     [minimumRetweetsKey]: new Set(['lte', 'lt']),
+}
+
+// Readables for UI error handling purposes
+const comparatorReadable = {
+    lte: '≤',
+    lt: '<'
 }
 
 // Prevent bad code, with the lack of unit tests
@@ -340,12 +343,14 @@ const fields = [
     }
 ];
 
+// Map by key
 const fieldsByKey = {};
 fields.forEach((f) => {
     fieldsByKey[f.key] = f;
 });
 
 
+// The Quantleaf Query API call
 async function getResult(input) {
     if (!input)
         return null;
@@ -409,11 +414,6 @@ function injectAsOption(responseBody) {
                     dropDown.prepend(advancedSearchSuggestion);
                 }
 
-            }
-            else {
-                // Remove option
-                if (dropDown.firstChild?.id == autoCompleteAdvId)
-                    dropDown.removeChild(advancedSearchSuggestion);
             }
         }
     }
@@ -597,7 +597,7 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
 
 }
 
-// Self evident code below 
+
 function getAny(object, keys) {
     for (let i = 0; i < keys.length; i++) {
         if (object[keys[i]] != undefined)
