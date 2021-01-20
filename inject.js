@@ -81,21 +81,6 @@ async function addAllListeners() {
                     lastUnParseQuery = searchField.value;
                     searchField.value = lastParseQuery;
                     event.stopImmediatePropagation();
-
-                    /*event.stopPropagation();
-                    event.preventDefault();
-                    setTimeout(() => {
-                        shiftDown = false;
-                        const keyboardEvent = new KeyboardEvent('keydown', {
-                            code: 'Enter',
-                            key: 'Enter',
-                            charKode: 13,
-                            keyCode: 13,
-                            view: window
-                        });
-                
-                        document.dispatchEvent(keyboardEvent);
-                    }, 1);*/
                 }
                 return;
             }
@@ -151,11 +136,10 @@ async function addAllListeners() {
 addAllListeners(); // Starting point 1
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        // messages sent from background.js indicating site navigation, which requires readding listeners
         if (request.message === '__new_url_ql__') {
             addAllListeners();  // Starting point 2
         }
-    });
+});
 
 
 
