@@ -114,8 +114,7 @@ async function addAllListeners() {
             }
             if (event.keyCode === 32) {
                 // Space clicked, toggle keywords
-                if(ctrlDown)
-                {
+                if (ctrlDown) {
                     showKeywords = !showKeywords;
                     printSuggestions();
                 }
@@ -348,8 +347,8 @@ fields.forEach((f) => {
 
 
 async function getResult(input) {
-    if(!input)
-    return null;
+    if (!input)
+        return null;
     const req = new XMLHttpRequest();
     const baseUrl = "https://api.query.quantleaf.com/translate";
     req.open("POST", baseUrl, true);
@@ -406,11 +405,10 @@ function injectAsOption(responseBody) {
             if (readableQuery) {
                 textContainer.innerHTML = readableQuery;
                 printSuggestions();
-                if (dropDown.lastChild != advancedSearchSuggestion && dropDown.firstChild != advancedSearchSuggestion) 
-                {
+                if (dropDown.lastChild != advancedSearchSuggestion && dropDown.firstChild != advancedSearchSuggestion) {
                     dropDown.prepend(advancedSearchSuggestion);
                 }
-    
+
             }
             else {
                 // Remove option
@@ -421,15 +419,12 @@ function injectAsOption(responseBody) {
     }
 }
 
-function printSuggestions()
-{
-    if(showKeywords)
-    {
+function printSuggestions() {
+    if (showKeywords) {
         hint.innerHTML = 'Keywords: ' + lastSuggestions;
 
     }
-    else
-    {
+    else {
         hint.innerHTML = '';
     }
 }
@@ -641,16 +636,15 @@ function formatValue(key, value) {
     if (field.domain == 'DATE') {
         return formatDate(value);
     }
-    if(field.domain[value]) // Enum domain!
+    if (field.domain[value]) // Enum domain!
     {
         let desc = firstDescription(field.domain[value]);
-        if(desc)
+        if (desc)
             return desc;
     }
     return value;
 }
-function firstDescription(desc)
-{
+function firstDescription(desc) {
     return Array.isArray(desc) ? desc[0] : desc
 }
 
