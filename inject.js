@@ -1,5 +1,7 @@
 // Settings
 const debounceTime = 200; //ms
+const api =  'https://api.query.quantleaf.com';
+const apiKey = fetch(api+'/auth/key/demo').then((resp)=> resp.text())
 
 // State
 var shiftDown = false;
@@ -72,12 +74,10 @@ async function addAllListeners() {
             }
 
             if (event.keyCode === 13) {
-                console.log('KEY DOWN ENTER')
 
                 if (shiftDown) {
                     // Execute
                     lastParseQuery = parseTwitterQuery(lastCondition);
-                    console.log(lastParseQuery);
                     lastUnParseQuery = searchField.value;
                     searchField.value = lastParseQuery;
                     event.stopImmediatePropagation();
@@ -354,10 +354,13 @@ fields.forEach((f) => {
 async function getResult(input) {
     if (!input)
         return null;
+    const key = await apiKey;
+    if(!key)
+        return null;
     const req = new XMLHttpRequest();
-    const baseUrl = "https://api.query.quantleaf.com/translate";
-    req.open("POST", baseUrl, true);
-    req.setRequestHeader("x-api-key", "42a69926-7020-4e4c-a6df-200145ee2beb");
+    const endpoint = api + "/translate";
+    req.open("POST", endpoint, true);
+    req.setRequestHeader("x-api-key", key);
     req.setRequestHeader('Content-type', 'application/json');
     req.send(
         JSON.stringify({
@@ -484,10 +487,6 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
 
         if (fieldInvalidComparators[comp.key]) {
             const invalidComparators = [...fieldInvalidComparators[comp.key]].filter(comparator => comp[comparator] != undefined);
-            console.log([...fieldInvalidComparators[comp.key]]);
-            console.log(invalidComparators);
-            console.log(comp);
-
             if (invalidComparators.length > 0) {
                 alert(`You can not filter on ${oneDescription} with a ${comparatorReadable[invalidComparators[0]]} comparator`)
 
@@ -548,7 +547,6 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
                 }
             case repliesFilterKey:
                 {
-                    console.log('--_>', comp.eq)
                     switch (comp.eq) {
                         case 'INCLUDE_REPLIES_ONLY':
                             {

@@ -1,6 +1,6 @@
 {
-    "name": "twitter-natural-advanced-search",
-    "version": "1.0",
+    "name": "Twitter Natural Advanced Search",
+    "version": "0.0.1",
     "description": "A chrome extension based on Quantleaf Query to create natural advanced searches",
     "permissions": [
       "activeTab", 
