@@ -602,7 +602,7 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
 
 }
 
-// Selfevident code below 
+// Self evident code below 
 function getAny(object, keys) {
     for (let i = 0; i < keys.length; i++) {
         if (object[keys[i]] != undefined)
