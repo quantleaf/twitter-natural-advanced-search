@@ -14,7 +14,7 @@ You can toggle suggestions and keywords with ctrl + space.
 
 
 ## How it works
-It uses [query.quantleaf.com](https://query.quantleaf.com) under the hood to convert natural languages to the advanced search format. See *inject.js* for reference. 
+It uses [query.quantleaf.com](https://query.quantleaf.com) under the hood to convert natural languages to the advanced search format. See the file *inject.js* to learn about how it was implemented for this tool. 
 
  
 <br/>
