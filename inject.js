@@ -353,7 +353,11 @@ fields.forEach((f) => {
 // The Quantleaf Query API call
 async function getResult(input) {
     if (!input)
+    {
+        injectAsOption(null)
         return null;
+
+    }
     const key = await apiKey;
     if(!key)
         return null;
@@ -395,10 +399,10 @@ async function getResult(input) {
 
 // Injects advanced search UI as the first result element
 function injectAsOption(responseBody) {
-    lastCondition = (responseBody.query?.length > 0 && responseBody.query[0].condition) ? responseBody.query[0].condition : null;
+    lastCondition = (responseBody?.query?.length > 0 && responseBody.query[0].condition) ? responseBody.query[0].condition : null;
     const readableQuery = lastCondition ? parseReadableQuery(lastCondition) : null;
 
-    const suggestObjects = responseBody.suggest;
+    const suggestObjects = responseBody?.suggest;
     const suggestLimit = 10;
     let suggestions = suggestObjects?.map(s => s.text.trim()).slice(0, Math.min(suggestObjects.length, suggestLimit)).join(', ');
     if (suggestObjects?.length > suggestLimit)
@@ -409,15 +413,28 @@ function injectAsOption(responseBody) {
     for (let i = 1; i < 10; i++) {
         const dropDown = document.getElementById(dropDownIdPrefix + '-' + i);
         if (dropDown) {
-            //iframe.src = chrome.runtime.getURL('suggestions/suggestions.html');
-            if (readableQuery) {
+            if(!readableQuery)
+            {
+                textContainer.innerHTML = '';
+                for (let i = 0; i < dropDown.children.length; i++) { // Remove child if exist
+                    const element = dropDown.children[i];
+                    if(element  === advancedSearchSuggestion)
+                    {
+                        dropDown.removeChild(advancedSearchSuggestion);
+                        break;
+                    }
+                }
+            }    
+            else  
+            {
                 textContainer.innerHTML = readableQuery;
                 printSuggestions();
                 if (dropDown.lastChild != advancedSearchSuggestion && dropDown.firstChild != advancedSearchSuggestion) {
                     dropDown.prepend(advancedSearchSuggestion);
                 }
-
             }
+            
+        
         }
     }
 }
