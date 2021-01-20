@@ -14,5 +14,4 @@ It uses Quantleaf Query under the hood to map natural languages to the advanced 
 
 
 
-
-Enjoy! 😎
+Enjoy! 🏄🏼‍♀️
