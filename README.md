@@ -1,5 +1,5 @@
 # Twitter Natural Advanced Search
-This is a small chrome extension which lets you twitter search fields auto detect search that resembles "advanced search", that is currently today accesible through the advanced search UI or through their own syntax that might not be the easiest. It supports all possible advanced searches!
+This is a small chrome extension which lets you twitter search fields auto detect search that resembles "advanced search", that is currently today accessible through the advanced search UI or through their own syntax that might not be the easiest. It supports all possible advanced searches!
 
 ![Demo search](/../master/screenshot.PNG?raw=true)
 
