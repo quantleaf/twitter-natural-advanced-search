@@ -4,7 +4,7 @@ This is a small chrome extension which lets you twitter search fields auto detec
 ## How to use
 Currently not available on the Chrome store. Please clone repo and use this as a development extension to test it.
 
-If you type in a search field and get a matchind advanced search suggestion you press shift + enter, to apply it. It wont apply automatically when pressing.
+If you type in a search field and get a matching advanced search suggestion you press shift + enter, to apply it. It wont apply automatically when pressing enter.
 
 You can toggle suggestions and keywords with ctrl + space.
 
@@ -15,3 +15,4 @@ It uses Quantleaf Query under the hood to map natural languages to the advanced 
 
 
 
+Enjoy! 😎
