@@ -12,6 +12,10 @@ You can toggle suggestions and keywords with ctrl + space.
 ## How it works
 It uses Quantleaf Query under the hood to map natural languages to the advanced search format. See *index.js* for reference. 
 
+ 
+<br/>
+<br/>
 
+**Enjoy! 🏄🏼‍♀️**
 
-Enjoy! 🏄🏼‍♀️
+// Marcus
