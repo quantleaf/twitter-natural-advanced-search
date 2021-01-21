@@ -12,8 +12,9 @@ var lastSuggestions = null;
 var lastParseQuery = null;
 var lastUnParseQuery = null;
 var lastResponseBody = null;
-
 var showKeywords = false;
+
+
 // UI
 var advancedSearchSuggestion = document.createElement('div');
 advancedSearchSuggestion.style = 'display: flex; flex-direction: column; justify-content:left; padding: 15px; border-bottom: solid 1px rgb(235, 238, 240)';
@@ -53,7 +54,7 @@ textContainer.style = "padding-top: 10px; color: rgb(15, 20, 25); font-size: 14p
 advancedSearchSuggestion.appendChild(textContainer);
 
 
-
+// Add listeners for the search field, and click on the search field
 async function addAllListeners() {
     var inserted = false;
     while (!inserted) {
@@ -142,7 +143,8 @@ chrome.runtime.onMessage.addListener(
 
 
 
-// The search experience
+// The search experience, code that define the translation to natural language to the generalized query structure
+// and code that transform the generalized query structure into twitter query syntax
 
 // We hard code the keys since we are to reference them on two places
 const allWordsKey = 'all';
