@@ -100,8 +100,6 @@ async function addAllListeners() {
 
             if (event.keyCode === 32) {
                 // Space clicked, toggle keywords
-                console.log('SPACE', ctrlDown)
-
                 if (ctrlDown) {
                     showKeywords = !showKeywords;
                     tip.innerHTML = showKeywords ? hideKeyswWordsHTML : showKeyswWordsHTML;
@@ -665,12 +663,13 @@ function formatValue(key, value) {
     if (field.domain == 'DATE') {
         return formatDate(value);
     }
-    if (field.domain[value]) // Enum domain!
+    if (typeof field.domain != 'string' && field.domain[value]) // Enum domain!
     {
         let desc = firstDescription(field.domain[value]);
         if (desc)
             return desc;
     }
+
     return value;
 }
 function firstDescription(desc) {
