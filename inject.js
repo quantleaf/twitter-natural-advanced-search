@@ -4,7 +4,6 @@ const api =  'https://api.query.quantleaf.com';
 const apiKey = fetch(api+'/auth/key/demo').then((resp)=> resp.text())
 
 // State
-var shiftDown = false;
 var ctrlDown = false;
 var lastRequestTime = new Date().getTime();
 var lastCondition = null;
@@ -12,11 +11,16 @@ var lastSearchField = null;
 var lastSuggestions = null;
 var lastParseQuery = null;
 var lastUnParseQuery = null;
+var lastResponseBody = null;
+
 var showKeywords = false;
-
 // UI
-var advancedSearchSuggestion = document.createElement('div')
-
+var advancedSearchSuggestion = document.createElement('div');
+advancedSearchSuggestion.style = 'display: flex; flex-direction: column; justify-content:left; padding: 15px; border-bottom: solid 1px rgb(235, 238, 240)';
+advancedSearchSuggestion.addEventListener("click", event => {
+    alert("Press 'Enter' to trigger Advanced Search");
+    insertHidden();
+});
 
 var infoDiv = document.createElement('div');
 infoDiv.style = "display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;";
@@ -27,11 +31,14 @@ header.style = "display: flex; flex-direction: row; width: 100%";
 
 var title = document.createElement('span');
 title.innerHTML = 'Advanced Search'
-title.style = "font-size: medium;";
+title.style = "font-size: medium; height: 20px";
 header.appendChild(title);
 var tip = document.createElement('span');
-tip.innerHTML = 'Apply: (shift) + (enter) <br/> Suggestions: (ctrl) + (space)'
-tip.style = "font-style: italic; font-size: medium; margin-left: auto; font-size: small; font-size: x-small; max-width: 150px;";
+const showKeyswWordsHTML = 'Show keywords: (ctrl) + (space)';
+const hideKeyswWordsHTML = 'Hide keywords: (ctrl) + (space)';
+tip.innerHTML = showKeyswWordsHTML;
+
+tip.style = "line-height: 20px; font-style: italic; font-size: medium; margin-left: auto; font-size: small; font-size: x-small; max-width: 150px;";
 header.appendChild(tip);
 infoDiv.appendChild(header);
 
@@ -46,7 +53,6 @@ textContainer.style = "padding-top: 10px; color: rgb(15, 20, 25); font-size: 14p
 advancedSearchSuggestion.appendChild(textContainer);
 
 
-advancedSearchSuggestion.style = 'display: flex; flex-direction: column; justify-content:left; padding: 15px; border-bottom: solid 1px rgb(235, 238, 240)';
 
 async function addAllListeners() {
     var inserted = false;
@@ -63,23 +69,22 @@ async function addAllListeners() {
             return;
 
         lastSearchField = searchField;
-        searchField.addEventListener("keydown", event => {
-            if (event.keyCode === 16) {
-                shiftDown = true
-                return;
-            }
+        lastSearchField.addEventListener("keydown", event => {
+   
             if (event.keyCode === 17) {
-                ctrlDown = true
+                ctrlDown = true;
                 return;
             }
+            lastUnParseQuery = lastSearchField.value;
 
             if (event.keyCode === 13) {
 
-                if (shiftDown) {
-                    // Execute
-                    lastParseQuery = parseTwitterQuery(lastCondition);
-                    lastUnParseQuery = searchField.value;
-                    searchField.value = lastParseQuery;
+                // Execute
+                insertHidden(); // Make sure a search will appear
+
+                const newTwitterQuery = applyTwitterFormat();
+                if(newTwitterQuery)
+                {
                     event.stopImmediatePropagation();
                 }
                 return;
@@ -87,18 +92,19 @@ async function addAllListeners() {
         });
 
         searchField.addEventListener("keyup", event => {
-            if (event.keyCode === 16) {
-                shiftDown = false
-                return;
-            }
+
+           
             if (event.keyCode === 17) {
-                ctrlDown = false
-                return;
+                ctrlDown = false;
             }
+
             if (event.keyCode === 32) {
                 // Space clicked, toggle keywords
+                console.log('SPACE', ctrlDown)
+
                 if (ctrlDown) {
                     showKeywords = !showKeywords;
+                    tip.innerHTML = showKeywords ? hideKeyswWordsHTML : showKeyswWordsHTML;
                     printSuggestions();
                 }
                 return;
@@ -114,13 +120,8 @@ async function addAllListeners() {
         });
 
         searchField.addEventListener("click", event => {
-
-            if (searchField.value == lastParseQuery) {
-                searchField.value = lastUnParseQuery;
-            }
-            if (event.keyCode === 16) {
-                shiftDown = false
-                return;
+            if (searchField.value && ((searchField.value?.startsWith(lastParseQuery) || lastParseQuery?.startsWith(searchField.value)) &&  !lastUnParseQuery?.startsWith(lastParseQuery) && !lastParseQuery?.startsWith(lastUnParseQuery))) {
+                insertText(lastUnParseQuery,true);
             }
 
             if (event.isComposing || event.keyCode === 229) {
@@ -334,6 +335,19 @@ fields.forEach((f) => {
 });
 
 
+// Translate to twitter query and set text to input
+function applyTwitterFormat()
+{
+    lastParseQuery = parseTwitterQuery(lastCondition);
+    if(lastParseQuery) // Only change value if we actually have parsed any query
+    {
+        insertText(lastParseQuery, true);
+    }
+
+    return lastParseQuery;
+}
+
+
 // The Quantleaf Query API call
 async function getResult(input) {
     if (!input)
@@ -374,7 +388,7 @@ async function getResult(input) {
     req.onreadystatechange = function () { // Call a function when the state changes.
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             const body = JSON.parse(req.response);
-            lastCondition = body;
+            lastResponseBody = body;
             injectAsOption(body)
 
         }
@@ -383,6 +397,7 @@ async function getResult(input) {
 
 // Injects advanced search UI as the first result element
 function injectAsOption(responseBody) {
+    
     lastCondition = (responseBody?.query?.length > 0 && responseBody.query[0].condition) ? responseBody.query[0].condition : null;
     const readableQuery = lastCondition ? parseReadableQuery(lastCondition) : null;
 
@@ -422,6 +437,21 @@ function injectAsOption(responseBody) {
         }
     }
 }
+
+function insertHidden()
+{
+    insertText('‎',false) // trigger change 
+
+}
+function insertText( text,clear)
+{
+    lastSearchField.focus();
+    if(clear)
+        lastSearchField.value = '';
+    document.execCommand('insertText', false, text);
+    lastSearchField.dispatchEvent(new Event('change', {bubbles: true})); // usually not needed
+}
+
 
 function printSuggestions() {
     if (showKeywords) {
@@ -575,7 +605,7 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
             case dateKey:
                 {
                     if (comp.eq) {
-                        return `since: ${formatDate(comp.eq)} until:${formatDate(comp.eq)}`;
+                        return `since:${formatDate(comp.eq)} until:${formatDate(comp.eq)}`;
                     }
                     if (comp.lt) {
                         return `until:${formatDate(dayBefore(comp.lt))}`;
