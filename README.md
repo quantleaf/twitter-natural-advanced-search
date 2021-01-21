@@ -3,8 +3,6 @@ This is a small chrome extension which lets you twitter search fields auto detec
 
 ![Demo search](/../master/snap.PNG?raw=true)
 
-*"from elonmusk about bitcoin between 2011-01-10 and today include links english"*
-
 ## How to use
 Install from the [Chrome store](https://chrome.google.com/webstore/detail/twitter-natural-advanced/fkjippcbpjcnjfoohfhaghfelfanamee) or clone the repo and use this as a development extension.
 
