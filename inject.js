@@ -577,7 +577,9 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
     if (condition.and) {
         const and = [];
         condition.and.forEach((element) => {
-            and.push(parseTwitterQuery(element, fieldCounter));
+            const compare = parseTwitterQuery(element, fieldCounter);
+            if(compare?.length > 0)
+            and.push(compare);
         });
         return `${and.join(' ')}`;
     }
@@ -661,6 +663,7 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
                                 return '-filter:replies'
                             }
                     }
+                    return;
                 }
             case linksFilterKey:
                 {
@@ -674,6 +677,8 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
                                 return '-filter:links'
                             }
                     }
+                    return;
+
                 }
             case dateKey:
                 {
@@ -692,6 +697,8 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
                     if (comp.gte) {
                         return `since:${formatDate(comp.gte)}`;
                     }
+                    return;
+
                 }
         }
     }
