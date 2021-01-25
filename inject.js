@@ -17,7 +17,6 @@ var showKeywords = false;
 
 // UI
 var advancedSearchSuggestion = document.createElement('div');
-advancedSearchSuggestion.style = 'display: flex; flex-direction: column; justify-content:left; padding: 15px; border-bottom: solid 1px rgb(235, 238, 240)';
 advancedSearchSuggestion.addEventListener("click", event => {
     alert("Press 'Enter' to trigger Advanced Search");
     insertHidden();
@@ -32,30 +31,74 @@ header.style = "display: flex; flex-direction: row; width: 100%";
 
 var title = document.createElement('span');
 title.innerHTML = 'Advanced Search'
-title.style = "font-size: medium; height: 20px";
 header.appendChild(title);
 var tip = document.createElement('span');
-const showKeyswWordsHTML = 'Show keywords: (ctrl) + (space)';
-const hideKeyswWordsHTML = 'Hide keywords: (ctrl) + (space)';
+const showKeyswWordsHTML = 'Show keywords <br/> (ctrl) + (space)';
+const hideKeyswWordsHTML = 'Hide keywords <br/> (ctrl) + (space)';
 tip.innerHTML = showKeyswWordsHTML;
 
-tip.style = "line-height: 20px; font-style: italic; font-size: medium; margin-left: auto; font-size: small; font-size: x-small; max-width: 150px;";
+tip.style = "line-height: 10px; font-style: italic; margin-left: auto; font-size: small; font-size: xx-small; max-width: 150px;";
 header.appendChild(tip);
 infoDiv.appendChild(header);
 
 var hint = document.createElement('span');
-hint.innerHTML = 'Suggestions: ABC123, defge'
+hint.innerHTML = ''
 hint.style = "font-size: small; font-style: italic";
 infoDiv.appendChild(hint);
 
 
 var textContainer = document.createElement('div');
-textContainer.style = "padding-top: 10px; color: rgb(15, 20, 25); font-size: 14px; font-weight: bold;  font-family: monospace;";
 advancedSearchSuggestion.appendChild(textContainer);
 
+function setDynamicStyle()
+{
+    const colorMode = getColorMode();
+    const fontSize  = getFontSize();
+    let colorString = 'rgb(15, 20, 25);'
+    let borderColorString  = 'rgb(235, 238, 240);';
+    if(colorMode == 'dark')
+    {
+        colorString = 'rgba(217,217,217,1.00)';
+        borderColorString = 'rgb(47, 51, 54)';
+    }
+    else if(colorMode == 'dim')
+    {
+        colorString = 'rgb(255, 255, 255)';
+        borderColorString = 'rgb(56, 68, 77)';
+    }
+    const colorStyle = `color: ${colorString};`
+    textContainer.style = `white-space: pre-wrap; word-wrap: break-word;padding-top: 10px;  font-size: ${fontSize}; font-weight: bold;  font-family: monospace; ${colorStyle}`
+    title.style = `font-size: ${fontSize}; height: 20px  ${colorStyle}`;
+    advancedSearchSuggestion.style = `display: flex; flex-direction: column; justify-content:left; padding: 15px; border-bottom: solid 1px ${borderColorString};  ${colorStyle}`;
 
-// Add listeners for the search field, and click on the search field
-async function addAllListeners() {
+}
+
+function getColorMode()
+{
+    let color = window.getComputedStyle(document.body).getPropertyValue('background-color')
+    colors = convertColor(color);
+    let mean = 0;
+    colors.forEach((color)=>
+    {
+        mean += color;
+    })
+    mean = mean/3;
+    if(mean < 15)
+        return 'dark'
+    if(mean < 100)
+        return 'dim'
+    return 'light'
+}
+
+
+function getFontSize()
+{
+    return window.getComputedStyle(document.getElementById('react-root')).getPropertyValue('font-size')
+    
+}
+
+// Add listeners for the search field, and set colors for styling (depending on color mode, light, dim, dark)
+async function initialize() {
     var inserted = false;
     while (!inserted) {
         await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 sec
@@ -64,7 +107,8 @@ async function addAllListeners() {
             inserted = true;
         else
             continue;
-
+        
+        setDynamicStyle();
         getResult(searchField.value);
         if (lastSearchField === searchField)
             return;
@@ -133,11 +177,11 @@ async function addAllListeners() {
     }
 }
 
-addAllListeners(); // Starting point 1
+initialize(); // Starting point 1
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         if (request.message === '__new_url_ql__') {
-            addAllListeners();  // Starting point 2
+            initialize();  // Starting point 2
         }
 });
 
@@ -408,33 +452,32 @@ function injectAsOption(responseBody) {
         suggestions += ', ...'
     lastSuggestions = suggestions;
     // Find the option list, and inject as first option
-    const dropDownIdPrefix = 'typeaheadDropdown';
-    for (let i = 1; i < 10; i++) {
-        const dropDown = document.getElementById(dropDownIdPrefix + '-' + i);
-        if (dropDown) {
-            if(!readableQuery)
-            {
-                textContainer.innerHTML = '';
-                for (let i = 0; i < dropDown.children.length; i++) { // Remove child if exist
-                    const element = dropDown.children[i];
-                    if(element  === advancedSearchSuggestion)
-                    {
-                        dropDown.removeChild(advancedSearchSuggestion);
-                        break;
-                    }
-                }
-            }    
-            else  
-            {
-                textContainer.innerHTML = readableQuery;
-                printSuggestions();
-                if (dropDown.lastChild != advancedSearchSuggestion && dropDown.firstChild != advancedSearchSuggestion) {
-                    dropDown.prepend(advancedSearchSuggestion);
+   
+    const dropDown = document.querySelector('[id^="typeaheadDropdown-"]');
+    if (dropDown) {
+        if(!readableQuery)
+        {
+            textContainer.innerHTML = '';
+            for (let i = 0; i < dropDown.children.length; i++) { // Remove child if exist
+                const element = dropDown.children[i];
+                if(element  === advancedSearchSuggestion)
+                {
+                    dropDown.removeChild(advancedSearchSuggestion);
+                    break;
                 }
             }
-            
-        
+        }    
+        else  
+        {
+            textContainer.innerHTML = readableQuery;
+            printSuggestions();
+            if (dropDown.lastChild != advancedSearchSuggestion && dropDown.firstChild != advancedSearchSuggestion) {
+                dropDown.prepend(advancedSearchSuggestion);
+            }
         }
+        
+        
+        
     }
 }
 
@@ -462,6 +505,36 @@ function printSuggestions() {
         hint.innerHTML = '';
     }
 }
+
+
+function convertColor(color)
+{  
+  var rgbColors=new Object();
+
+  // rgb
+  if (color[0]=='r')
+  {
+    color=color.substring(color.indexOf('(')+1, color.indexOf(')'));
+    rgbColors=color.split(',', 3);
+    rgbColors[0]=parseInt(rgbColors[0]);
+    rgbColors[1]=parseInt(rgbColors[1]);
+    rgbColors[2]=parseInt(rgbColors[2]);		
+  }
+
+  //hex
+  else if (color.substring(0,1)=="#")
+  {
+    
+    rgbColors[0]=color.substring(1, 3);  // redValue
+    rgbColors[1]=color.substring(3, 5);  // greenValue
+    rgbColors[2]=color.substring(5, 7);  // blueValue
+    rgbColors[0]=parseInt(rgbColors[0], 16);
+    rgbColors[1]=parseInt(rgbColors[1], 16);
+    rgbColors[2]=parseInt(rgbColors[2], 16);
+    }
+  return rgbColors;
+}
+
 
 
 // Readable representation of the query object
