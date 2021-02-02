@@ -122,11 +122,10 @@ async function initialize() {
             }
             lastUnParseQuery = lastSearchField.value;
 
-            if (event.keyCode === 13) {
+            if (event.keyCode === 13 && !ctrlDown) {
 
                 // Execute
                 insertHidden(); // Make sure a search will appear
-
                 const newTwitterQuery = applyTwitterFormat();
                 if(newTwitterQuery)
                 {
@@ -159,6 +158,7 @@ async function initialize() {
                 if ((lastRequestTime + debounceTime) < new Date().getTime())
                     getResult(event.target.value);
             }, debounceTime + 1);
+
             lastRequestTime = new Date().getTime();
         });
 

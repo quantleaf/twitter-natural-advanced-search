@@ -1,7 +1,7 @@
 {
     "name": "Twitter Natural Advanced Search",
-    "version": "0.0.5",
-    "description": "A chrome extension based on Quantleaf Query to create natural advanced searches",
+    "version": "0.0.6",
+    "description": "Twitter Advanced Search in Natural Language",
     "permissions": [
       "tabs",
       "declarativeContent"
@@ -16,7 +16,7 @@
       "all_frames": true,
       "run_at": "document_end"
     }],
-    "page_action": {
+    "browser_action": {
       "default_popup": "popup.html",
       "default_icon": {
         "16": "images/logo-16x16.png",
