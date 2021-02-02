@@ -1,7 +1,7 @@
 // Settings
 const debounceTime = 200; //ms
-const api =  'https://api.query.quantleaf.com';
-const apiKey = fetch(api+'/auth/key/demo').then((resp)=> resp.text())
+const api = 'https://api.query.quantleaf.com';
+const apiKey = fetch(api + '/auth/key/demo').then((resp) => resp.text())
 
 // State
 var ctrlDown = false;
@@ -13,7 +13,6 @@ var lastParseQuery = null;
 var lastUnParseQuery = null;
 var lastResponseBody = null;
 var showKeywords = false;
-
 
 // UI
 var advancedSearchSuggestion = document.createElement('div');
@@ -50,19 +49,16 @@ infoDiv.appendChild(hint);
 var textContainer = document.createElement('div');
 advancedSearchSuggestion.appendChild(textContainer);
 
-function setDynamicStyle()
-{
+function setDynamicStyle() {
     const colorMode = getColorMode();
-    const fontSize  = getFontSize();
+    const fontSize = getFontSize();
     let colorString = 'rgb(15, 20, 25);'
-    let borderColorString  = 'rgb(235, 238, 240);';
-    if(colorMode == 'dark')
-    {
+    let borderColorString = 'rgb(235, 238, 240);';
+    if (colorMode == 'dark') {
         colorString = 'rgba(217,217,217,1.00)';
         borderColorString = 'rgb(47, 51, 54)';
     }
-    else if(colorMode == 'dim')
-    {
+    else if (colorMode == 'dim') {
         colorString = 'rgb(255, 255, 255)';
         borderColorString = 'rgb(56, 68, 77)';
     }
@@ -73,28 +69,25 @@ function setDynamicStyle()
 
 }
 
-function getColorMode()
-{
+function getColorMode() {
     let color = window.getComputedStyle(document.body).getPropertyValue('background-color')
     colors = convertColor(color);
     let mean = 0;
-    colors.forEach((color)=>
-    {
+    colors.forEach((color) => {
         mean += color;
     })
-    mean = mean/3;
-    if(mean < 15)
+    mean = mean / 3;
+    if (mean < 15)
         return 'dark'
-    if(mean < 100)
+    if (mean < 100)
         return 'dim'
     return 'light'
 }
 
 
-function getFontSize()
-{
+function getFontSize() {
     return window.getComputedStyle(document.getElementById('react-root')).getPropertyValue('font-size')
-    
+
 }
 
 // Add listeners for the search field, and set colors for styling (depending on color mode, light, dim, dark)
@@ -107,7 +100,7 @@ async function initialize() {
             inserted = true;
         else
             continue;
-        
+
         setDynamicStyle();
         getResult(searchField.value);
         if (lastSearchField === searchField)
@@ -115,7 +108,7 @@ async function initialize() {
 
         lastSearchField = searchField;
         lastSearchField.addEventListener("keydown", event => {
-   
+
             if (event.keyCode === 17) {
                 ctrlDown = true;
                 return;
@@ -127,8 +120,7 @@ async function initialize() {
                 // Execute
                 insertHidden(); // Make sure a search will appear
                 const newTwitterQuery = applyTwitterFormat();
-                if(newTwitterQuery)
-                {
+                if (newTwitterQuery) {
                     event.stopImmediatePropagation();
                 }
                 return;
@@ -137,7 +129,7 @@ async function initialize() {
 
         searchField.addEventListener("keyup", event => {
 
-           
+
             if (event.keyCode === 17) {
                 ctrlDown = false;
             }
@@ -163,8 +155,8 @@ async function initialize() {
         });
 
         searchField.addEventListener("click", event => {
-            if (searchField.value && ((searchField.value?.startsWith(lastParseQuery) || lastParseQuery?.startsWith(searchField.value)) &&  !lastUnParseQuery?.startsWith(lastParseQuery) && !lastParseQuery?.startsWith(lastUnParseQuery))) {
-                insertText(lastUnParseQuery,true);
+            if (searchField.value && ((searchField.value?.startsWith(lastParseQuery) || lastParseQuery?.startsWith(searchField.value)) && !lastUnParseQuery?.startsWith(lastParseQuery) && !lastParseQuery?.startsWith(lastUnParseQuery))) {
+                insertText(lastUnParseQuery, true);
             }
 
             if (event.isComposing || event.keyCode === 229) {
@@ -183,7 +175,7 @@ chrome.runtime.onMessage.addListener(
         if (request.message === '__new_url_ql__') {
             initialize();  // Starting point 2
         }
-});
+    });
 
 
 
@@ -380,10 +372,9 @@ fields.forEach((f) => {
 
 
 // Translate to twitter query and set text to input
-function applyTwitterFormat()
-{
+function applyTwitterFormat() {
     lastParseQuery = parseTwitterQuery(lastCondition);
-    if(lastParseQuery) // Only change value if we actually have parsed any query
+    if (lastParseQuery) // Only change value if we actually have parsed any query
     {
         insertText(lastParseQuery, true);
     }
@@ -394,14 +385,13 @@ function applyTwitterFormat()
 
 // The Quantleaf Query API call
 async function getResult(input) {
-    if (!input)
-    {
+    if (!input) {
         injectAsOption(null)
         return null;
 
     }
     const key = await apiKey;
-    if(!key)
+    if (!key)
         return null;
     const req = new XMLHttpRequest();
     const endpoint = api + "/translate";
@@ -441,7 +431,7 @@ async function getResult(input) {
 
 // Injects advanced search UI as the first result element
 function injectAsOption(responseBody) {
-    
+
     lastCondition = (responseBody?.query?.length > 0 && responseBody.query[0].condition) ? responseBody.query[0].condition : null;
     const readableQuery = lastCondition ? parseReadableQuery(lastCondition) : null;
 
@@ -452,47 +442,42 @@ function injectAsOption(responseBody) {
         suggestions += ', ...'
     lastSuggestions = suggestions;
     // Find the option list, and inject as first option
-   
+
     const dropDown = document.querySelector('[id^="typeaheadDropdown-"]');
     if (dropDown) {
-        if(!readableQuery)
-        {
+        if (!readableQuery) {
             textContainer.innerHTML = '';
             for (let i = 0; i < dropDown.children.length; i++) { // Remove child if exist
                 const element = dropDown.children[i];
-                if(element  === advancedSearchSuggestion)
-                {
+                if (element === advancedSearchSuggestion) {
                     dropDown.removeChild(advancedSearchSuggestion);
                     break;
                 }
             }
-        }    
-        else  
-        {
+        }
+        else {
             textContainer.innerHTML = readableQuery;
             printSuggestions();
             if (dropDown.lastChild != advancedSearchSuggestion && dropDown.firstChild != advancedSearchSuggestion) {
                 dropDown.prepend(advancedSearchSuggestion);
             }
         }
-        
-        
-        
+
+
+
     }
 }
 
-function insertHidden()
-{
-    insertText('‎',false) // trigger change 
+function insertHidden() {
+    insertText('‎', false) // trigger change 
 
 }
-function insertText( text,clear)
-{
+function insertText(text, clear) {
     lastSearchField.focus();
-    if(clear)
+    if (clear)
         lastSearchField.value = '';
     document.execCommand('insertText', false, text);
-    lastSearchField.dispatchEvent(new Event('change', {bubbles: true})); // usually not needed
+    lastSearchField.dispatchEvent(new Event('change', { bubbles: true })); // usually not needed
 }
 
 
@@ -507,32 +492,29 @@ function printSuggestions() {
 }
 
 
-function convertColor(color)
-{  
-  var rgbColors=new Object();
+function convertColor(color) {
+    var rgbColors = new Object();
 
-  // rgb
-  if (color[0]=='r')
-  {
-    color=color.substring(color.indexOf('(')+1, color.indexOf(')'));
-    rgbColors=color.split(',', 3);
-    rgbColors[0]=parseInt(rgbColors[0]);
-    rgbColors[1]=parseInt(rgbColors[1]);
-    rgbColors[2]=parseInt(rgbColors[2]);		
-  }
-
-  //hex
-  else if (color.substring(0,1)=="#")
-  {
-    
-    rgbColors[0]=color.substring(1, 3);  // redValue
-    rgbColors[1]=color.substring(3, 5);  // greenValue
-    rgbColors[2]=color.substring(5, 7);  // blueValue
-    rgbColors[0]=parseInt(rgbColors[0], 16);
-    rgbColors[1]=parseInt(rgbColors[1], 16);
-    rgbColors[2]=parseInt(rgbColors[2], 16);
+    // rgb
+    if (color[0] == 'r') {
+        color = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
+        rgbColors = color.split(',', 3);
+        rgbColors[0] = parseInt(rgbColors[0]);
+        rgbColors[1] = parseInt(rgbColors[1]);
+        rgbColors[2] = parseInt(rgbColors[2]);
     }
-  return rgbColors;
+
+    //hex
+    else if (color.substring(0, 1) == "#") {
+
+        rgbColors[0] = color.substring(1, 3);  // redValue
+        rgbColors[1] = color.substring(3, 5);  // greenValue
+        rgbColors[2] = color.substring(5, 7);  // blueValue
+        rgbColors[0] = parseInt(rgbColors[0], 16);
+        rgbColors[1] = parseInt(rgbColors[1], 16);
+        rgbColors[2] = parseInt(rgbColors[2], 16);
+    }
+    return rgbColors;
 }
 
 
@@ -578,8 +560,8 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
         const and = [];
         condition.and.forEach((element) => {
             const compare = parseTwitterQuery(element, fieldCounter);
-            if(compare?.length > 0)
-            and.push(compare);
+            if (compare?.length > 0)
+                and.push(compare);
         });
         return `${and.join(' ')}`;
     }

@@ -1,2 +1,1 @@
-var newURL = "https://twitter.com/";
-chrome.tabs.create({ url: newURL });
+chrome.tabs.create({ url: "https://twitter.com/" });
