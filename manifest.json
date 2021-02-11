@@ -1,11 +1,8 @@
 {
     "name": "Twitter Natural Advanced Search",
-    "version": "0.0.6",
-    "description": "Twitter Advanced Search in Natural Language",
-    "permissions": [
-      "tabs",
-      "declarativeContent"
-    ],
+    "version": "0.0.9",
+    "description": "Perform Twitter Advanced Search in Natural Language",
+    "permissions": [],
     "background": {
       "scripts": ["background.js"],
       "persistent": false

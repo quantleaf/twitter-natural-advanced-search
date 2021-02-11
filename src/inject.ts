@@ -1,32 +1,31 @@
 // Settings
-const debounceTime = 200; //ms
+import { QueryResponse } from '@quantleaf/query-request';
+import { ConditionAnd, ConditionCompare, ConditionElement, Unknown } from '@quantleaf/query-result';
 const api = 'https://api.query.quantleaf.com';
 const apiKey = fetch(api + '/auth/key/demo').then((resp) => resp.text())
 
 // State
 var ctrlDown = false;
-var lastRequestTime = new Date().getTime();
-var lastCondition = null;
-var lastSearchField = null;
-var lastSuggestions = null;
-var lastParseQuery = null;
-var lastUnParseQuery = null;
-var lastResponseBody = null;
+var lastCondition:ConditionElement|undefined;
+var lastSearchField:HTMLInputElement;
+var lastSuggestions:string|undefined;
+var lastParseQuery:string|undefined;
+var lastUnParseQuery:string;
 var showKeywords = false;
 
 // UI
 var advancedSearchSuggestion = document.createElement('div');
-advancedSearchSuggestion.addEventListener("click", event => {
+advancedSearchSuggestion.addEventListener("click", () => {
     alert("Press 'Enter' to trigger Advanced Search");
     insertHidden();
 });
 
 var infoDiv = document.createElement('div');
-infoDiv.style = "display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;";
+infoDiv.style.cssText = "display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;";
 advancedSearchSuggestion.appendChild(infoDiv);
 
 var header = document.createElement('div');
-header.style = "display: flex; flex-direction: row; width: 100%";
+header.style.cssText = "display: flex; flex-direction: row; width: 100%";
 
 var title = document.createElement('span');
 title.innerHTML = 'Advanced Search'
@@ -36,20 +35,20 @@ const showKeyswWordsHTML = 'Show keywords <br/> (ctrl) + (space)';
 const hideKeyswWordsHTML = 'Hide keywords <br/> (ctrl) + (space)';
 tip.innerHTML = showKeyswWordsHTML;
 
-tip.style = "line-height: 10px; font-style: italic; margin-left: auto; font-size: small; font-size: xx-small; max-width: 150px;";
+tip.style.cssText = "line-height: 10px; font-style: italic; margin-left: auto; font-size: small; font-size: xx-small; max-width: 150px;";
 header.appendChild(tip);
 infoDiv.appendChild(header);
 
 var hint = document.createElement('span');
 hint.innerHTML = ''
-hint.style = "font-size: small; font-style: italic";
+hint.style.cssText = "font-size: small; font-style: italic";
 infoDiv.appendChild(hint);
 
 
 var textContainer = document.createElement('div');
 advancedSearchSuggestion.appendChild(textContainer);
 
-function setDynamicStyle() {
+const setDynamicStyle = () => {
     const colorMode = getColorMode();
     const fontSize = getFontSize();
     let colorString = 'rgb(15, 20, 25);'
@@ -63,15 +62,15 @@ function setDynamicStyle() {
         borderColorString = 'rgb(56, 68, 77)';
     }
     const colorStyle = `color: ${colorString};`
-    textContainer.style = `white-space: pre-wrap; word-wrap: break-word;padding-top: 10px;  font-size: ${fontSize}; font-weight: bold;  font-family: monospace; ${colorStyle}`
-    title.style = `font-size: ${fontSize}; height: 20px  ${colorStyle}`;
-    advancedSearchSuggestion.style = `display: flex; flex-direction: column; justify-content:left; padding: 15px; border-bottom: solid 1px ${borderColorString};  ${colorStyle}`;
+    textContainer.style.cssText = `white-space: pre-wrap; word-wrap: break-word;padding-top: 10px;  font-size: ${fontSize}; font-weight: bold;  font-family: monospace; ${colorStyle}`
+    title.style.cssText = `font-size: ${fontSize}; height: 20px  ${colorStyle}`;
+    advancedSearchSuggestion.style.cssText = `display: flex; flex-direction: column; justify-content:left; padding: 15px; border-bottom: solid 1px ${borderColorString};  ${colorStyle}`;
 
 }
 
-function getColorMode() {
+const getColorMode = () => {
     let color = window.getComputedStyle(document.body).getPropertyValue('background-color')
-    colors = convertColor(color);
+    var colors = convertColor(color);
     let mean = 0;
     colors.forEach((color) => {
         mean += color;
@@ -84,18 +83,41 @@ function getColorMode() {
     return 'light'
 }
 
+const debounce = <T extends (...args: any[]) => any>(
+    callback: T,
+    waitFor: number
+  ) => {
+    var timeout = null;
+    return (...args: Parameters<T>): ReturnType<T> => {
+      let result: any;
+      clearTimeout(timeout as any as number);
+      timeout = setTimeout(() => {
+        result = callback(...args);
+      }, waitFor) as any;
+      return result;
+    };
+};
 
-function getFontSize() {
-    return window.getComputedStyle(document.getElementById('react-root')).getPropertyValue('font-size')
+
+
+
+const getFontSize = () => {
+    return window.getComputedStyle(document.getElementById('react-root') as Element).getPropertyValue('font-size')
 
 }
 
 // Add listeners for the search field, and set colors for styling (depending on color mode, light, dim, dark)
-async function initialize() {
+const  initialize = async() => {
     var inserted = false;
     while (!inserted) {
         await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 sec
-        const searchField = document.querySelector('[aria-label="Search query"]');
+        const searchField = document.querySelector('[aria-label="Search query"]') as HTMLInputElement;
+        if(lastSearchField == searchField)
+        {
+            inserted = true;
+            break;
+        }
+
         if (searchField)
             inserted = true;
         else
@@ -146,21 +168,15 @@ async function initialize() {
             if (event.isComposing || event.keyCode === 229) {
                 return;
             }
-            setTimeout(() => {
-                if ((lastRequestTime + debounceTime) < new Date().getTime())
-                    getResult(event.target.value);
-            }, debounceTime + 1);
-
-            lastRequestTime = new Date().getTime();
+            debounce(() => {
+               
+                getResult((event?.target as any).value);
+            }, 201)();
         });
 
-        searchField.addEventListener("click", event => {
-            if (searchField.value && ((searchField.value?.startsWith(lastParseQuery) || lastParseQuery?.startsWith(searchField.value)) && !lastUnParseQuery?.startsWith(lastParseQuery) && !lastParseQuery?.startsWith(lastUnParseQuery))) {
+        searchField.addEventListener("click", () => {
+            if (searchField.value && (( (lastParseQuery && searchField.value?.startsWith(lastParseQuery)) || lastParseQuery?.startsWith(searchField.value)) && !lastUnParseQuery?.startsWith(lastParseQuery) && !lastParseQuery?.startsWith(lastUnParseQuery))) {
                 insertText(lastUnParseQuery, true);
-            }
-
-            if (event.isComposing || event.keyCode === 229) {
-                return;
             }
             getResult(searchField.value);
 
@@ -169,13 +185,16 @@ async function initialize() {
     }
 }
 
-initialize(); // Starting point 1
-chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
-        if (request.message === '__new_url_ql__') {
-            initialize();  // Starting point 2
-        }
-    });
+MutationObserver = window.MutationObserver;
+
+var observer = new MutationObserver(function() {
+    initialize(); 
+});
+
+observer.observe(document, {
+  subtree: true,
+  attributes: true
+});
 
 
 
@@ -294,7 +313,7 @@ const fields = [
             ro: "Romanian",
             ru: "Russian",
             sr: "Serbian",
-            'zh-tw': "Simplified Chinese",
+            'zh-cn': "Simplified Chinese",
             sk: "Slovak",
             es: "Spanish",
             sv: "Swedish",
@@ -309,7 +328,7 @@ const fields = [
     },
     {
         key: accountFromKey,
-        description: ["from", "account", "from account"],
+        description: [ "account", "from", "from account"],
         domain: 'TEXT'
     },
     {
@@ -372,7 +391,7 @@ fields.forEach((f) => {
 
 
 // Translate to twitter query and set text to input
-function applyTwitterFormat() {
+const applyTwitterFormat = () => {
     lastParseQuery = parseTwitterQuery(lastCondition);
     if (lastParseQuery) // Only change value if we actually have parsed any query
     {
@@ -384,9 +403,9 @@ function applyTwitterFormat() {
 
 
 // The Quantleaf Query API call
-async function getResult(input) {
+const getResult = async(input:string) => {
     if (!input) {
-        injectAsOption(null)
+        injectAsOption(input)
         return null;
 
     }
@@ -422,30 +441,135 @@ async function getResult(input) {
     req.onreadystatechange = function () { // Call a function when the state changes.
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             const body = JSON.parse(req.response);
-            lastResponseBody = body;
-            injectAsOption(body)
+            injectAsOption(input,body)
 
         }
     }
 }
 
-// Injects advanced search UI as the first result element
-function injectAsOption(responseBody) {
+const parseUnknownQuery = (input: string, unknown?: Unknown[]): ConditionCompare | undefined => {
+    if (!unknown)
+        return undefined;
+    let startUnknown:ConditionCompare | undefined = undefined;
+    let endUnkown:ConditionCompare | undefined = undefined;
 
-    lastCondition = (responseBody?.query?.length > 0 && responseBody.query[0].condition) ? responseBody.query[0].condition : null;
+    for (let i = 0; i < unknown.length; i++) {
+        const u = unknown[i];
+        if (u.offset == 0 && u.length > 2) {
+            let value = input.substring(u.offset, u.offset + u.length);
+
+            // Starts with unknown?
+            if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length - 1);
+            }
+            startUnknown = {
+                compare:
+                {
+                    key: allWordsKey,
+                    eq: value
+                }
+            }
+
+        }
+        // ends with unnknown?
+        if (u.offset + u.length == input.length) {
+            let value = input.substring(u.offset, u.offset + u.length);
+            if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length - 1);
+            }
+            endUnkown =  {
+                compare:
+                {
+                    key: allWordsKey,
+                    eq: value
+                }
+            }
+        }
+        if(startUnknown && endUnkown)
+            break;
+    }
+    let unknownToUse = startUnknown;
+    if(endUnkown?.compare?.eq)
+    {
+        if(!unknownToUse || !unknownToUse.compare.eq)
+            unknownToUse = endUnkown;
+        else //combine
+        {
+            // use end unknown if longer
+            unknownToUse.compare.eq = String(unknownToUse?.compare.eq) + ' ' + String(endUnkown?.compare.eq)
+        }
+    }
+    return unknownToUse;
+}
+
+
+
+// Injects advanced search UI as the first result element
+const injectAsOption = (input:string, responseBody?: QueryResponse) => {
+
+    
+
+    // Handle unkown
+    if(responseBody && responseBody.unknown)
+    {
+        const unknownAsQuery = parseUnknownQuery(input, responseBody.unknown);
+
+        // Merge in unknown query if applicable, we only check top level for now
+        if (responseBody && responseBody.query && responseBody.query.length > 0 &&  unknownAsQuery) {
+            if ((responseBody.query[0].condition as ConditionAnd).and) {
+                const and = responseBody.query[0].condition as ConditionAnd;
+                if (!and.and.find((x) => (x as ConditionCompare).compare?.key == allWordsKey)) {
+                    // Add the implicit query
+                    and.and.push(unknownAsQuery);
+                }
+    
+            }
+            else if ((responseBody.query[0].condition as ConditionCompare).compare) {
+                const comp = responseBody.query[0].condition as ConditionCompare;
+                if (comp.compare.key != allWordsKey) {
+                    const mergedCondition: ConditionAnd = {
+                        and: [
+                            comp,
+                            unknownAsQuery
+                        ]
+                    }
+                    responseBody.query[0].condition = mergedCondition;
+                }
+            }
+        }
+    }
+
+    let queryIsTrivial = true;
+    if(responseBody && responseBody.query)
+    {
+        lastCondition = (responseBody?.query?.length > 0 && responseBody.query[0].condition) ? responseBody.query[0].condition : undefined;
+        if(lastCondition)
+        {
+            let compares:ConditionCompare[]  = (lastCondition as ConditionAnd).and as ConditionCompare[];
+            if(!compares)
+            {
+                compares = [(lastCondition as ConditionCompare)];
+            }
+            queryIsTrivial = !(compares.find(x=>x.compare.key != allWordsKey) && compares.length > 0);
+        }
+    }
+    else 
+        lastCondition = undefined;
+        
+
     const readableQuery = lastCondition ? parseReadableQuery(lastCondition) : null;
 
     const suggestObjects = responseBody?.suggest;
     const suggestLimit = 10;
     let suggestions = suggestObjects?.map(s => s.text.trim()).slice(0, Math.min(suggestObjects.length, suggestLimit)).join(', ');
-    if (suggestObjects?.length > suggestLimit)
+    if (suggestObjects && suggestObjects?.length > suggestLimit)
         suggestions += ', ...'
     lastSuggestions = suggestions;
     // Find the option list, and inject as first option
 
     const dropDown = document.querySelector('[id^="typeaheadDropdown-"]');
     if (dropDown) {
-        if (!readableQuery) {
+        if (!readableQuery || queryIsTrivial) {
             textContainer.innerHTML = '';
             for (let i = 0; i < dropDown.children.length; i++) { // Remove child if exist
                 const element = dropDown.children[i];
@@ -468,11 +592,11 @@ function injectAsOption(responseBody) {
     }
 }
 
-function insertHidden() {
+const insertHidden = () => { 
     insertText('‎', false) // trigger change 
 
 }
-function insertText(text, clear) {
+const insertText = (text, clear) => {
     lastSearchField.focus();
     if (clear)
         lastSearchField.value = '';
@@ -481,7 +605,7 @@ function insertText(text, clear) {
 }
 
 
-function printSuggestions() {
+const printSuggestions = () => {
     if (showKeywords) {
         hint.innerHTML = 'Keywords: ' + lastSuggestions;
 
@@ -492,27 +616,28 @@ function printSuggestions() {
 }
 
 
-function convertColor(color) {
-    var rgbColors = new Object();
+const convertColor = (color) => {
+    const rgbColors:number[] = [0,0,0];
 
     // rgb
     if (color[0] == 'r') {
         color = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
-        rgbColors = color.split(',', 3);
-        rgbColors[0] = parseInt(rgbColors[0]);
-        rgbColors[1] = parseInt(rgbColors[1]);
-        rgbColors[2] = parseInt(rgbColors[2]);
+        const parsedColors = color.split(',', 3);
+        rgbColors[0] = parseInt(parsedColors[0]);
+        rgbColors[1] = parseInt(parsedColors[1]);
+        rgbColors[2] = parseInt(parsedColors[2]);
     }
 
     //hex
     else if (color.substring(0, 1) == "#") {
 
-        rgbColors[0] = color.substring(1, 3);  // redValue
-        rgbColors[1] = color.substring(3, 5);  // greenValue
-        rgbColors[2] = color.substring(5, 7);  // blueValue
-        rgbColors[0] = parseInt(rgbColors[0], 16);
-        rgbColors[1] = parseInt(rgbColors[1], 16);
-        rgbColors[2] = parseInt(rgbColors[2], 16);
+        const parsedColors:string[] = [];
+        parsedColors[0] = color.substring(1, 3);  // redValue
+        parsedColors[1] = color.substring(3, 5);  // greenValue
+        parsedColors[2] = color.substring(5, 7);  // blueValue
+        rgbColors[0] = parseInt(parsedColors[0], 16);
+        rgbColors[1] = parseInt(parsedColors[1], 16);
+        rgbColors[2] = parseInt(parsedColors[2], 16);
     }
     return rgbColors;
 }
@@ -520,16 +645,16 @@ function convertColor(color) {
 
 
 // Readable representation of the query object
-function parseReadableQuery(condition) {
+const parseReadableQuery = (condition) => {
     if (condition.and) {
-        const and = [];
+        const and:string[] = [];
         condition.and.forEach((element) => {
             and.push(parseReadableQuery(element));
         });
         return `${and.join('<br/>')}`;
     }
     if (condition.compare) {
-        const compElements = [];
+        const compElements:string[] = [];
         const comp = condition.compare;
         compElements.push(firstDescription(fieldsByKey[comp.key].description));
         if (comp.eq) {
@@ -553,11 +678,11 @@ function parseReadableQuery(condition) {
 }
 
 // Parse to a query format that twitter understands
-function parseTwitterQuery(condition, fieldCounter = {}) {
+const parseTwitterQuery = (condition, fieldCounter = {}) => {
     if (!condition)
         return '';
     if (condition.and) {
-        const and = [];
+        const and:string[] = [];
         condition.and.forEach((element) => {
             const compare = parseTwitterQuery(element, fieldCounter);
             if (compare?.length > 0)
@@ -665,7 +790,7 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
             case dateKey:
                 {
                     if (comp.eq) {
-                        return `since:${formatDate(comp.eq)} until:${formatDate(comp.eq)}`;
+                        return `since:${formatDate(comp.eq)} until:${formatDate(dayAfter(comp.eq))}`;
                     }
                     if (comp.lt) {
                         return `until:${formatDate(dayBefore(comp.lt))}`;
@@ -689,7 +814,7 @@ function parseTwitterQuery(condition, fieldCounter = {}) {
 }
 
 
-function getAny(object, keys) {
+const getAny = (object, keys) => {
     for (let i = 0; i < keys.length; i++) {
         if (object[keys[i]] != undefined)
             return object[keys[i]];
@@ -697,32 +822,32 @@ function getAny(object, keys) {
     }
     return null;
 }
-function ensurePrefix(word, prefix) {
+const ensurePrefix = (word, prefix) => {
     if (word.startsWith(prefix))
         return word;
     return prefix + word;
 }
-function wordSplit(words) {
+const wordSplit = (words) => {
     if (!words)
         return [];
     return words.replace(/,\s+/g, ",").split(/[\n,\s+]/)
 }
 
-function formatDate(ms) {
+const formatDate = (ms) => {
     return new Date(ms).toISOString().split('T')[0];;
 }
-function dayBefore(ms) {
-    date = new Date(ms);
+const dayBefore = (ms) => {
+    const date = new Date(ms);
     date.setDate(date.getDate() - 1);
     return date.getTime();
 }
 
-function dayAfter(ms) {
-    date = new Date(ms);
+const dayAfter = (ms) => {
+    const date = new Date(ms);
     date.setDate(date.getDate() + 1);
     return date.getTime();
 }
-function formatValue(key, value) {
+const formatValue = (key, value) => {
     const field = fieldsByKey[key];
     if (field.domain == 'DATE') {
         return formatDate(value);
@@ -736,7 +861,7 @@ function formatValue(key, value) {
 
     return value;
 }
-function firstDescription(desc) {
+const firstDescription = (desc) => {
     return Array.isArray(desc) ? desc[0] : desc
 }
 

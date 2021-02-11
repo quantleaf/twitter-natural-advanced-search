@@ -1,0 +1,27 @@
+{
+  "name": "@quantleaf/google-natural-advanced-search",
+  "version": "0.0.9",
+  "main": "build/inject.js",
+  "repository": "",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack -w",
+    "build-release": "webpack --config webpack.config.production.js"
+  },
+  "dependencies": {
+    "@quantleaf/query-request": "^1.0.15",
+    "@quantleaf/query-result": "^1.0.38"
+  },
+  "devDependencies": {
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "5.0.5",
+    "html-webpack-plugin": "^4.5.1",
+    "write-file-webpack-plugin": "^4.5.1",
+    "@types/chrome": "0.0.129",
+    "ts-loader": "^8.0.14",
+    "typescript": "^3.9.7",
+    "webpack": "^5.19.0",
+    "webpack-cli": "^4.4.0"
+  }
+}

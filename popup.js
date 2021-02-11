@@ -1,1 +1,0 @@
-chrome.tabs.create({ url: "https://twitter.com/" });

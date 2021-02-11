@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "removeComments": true,
+        "lib": ["es2015", "es2017", "dom"],
+        "strictNullChecks": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "alwaysStrict": true,
+        "noFallthroughCasesInSwitch": true,
+        "baseUrl": "./src",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "module": "es6",
+        "moduleResolution": "node",
+        "types": [
+            "chrome"
+        ],
+        "typeRoots": ["./node_modules/@types"],
+
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
