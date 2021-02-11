@@ -1,5 +1,5 @@
 {
-  "name": "@quantleaf/google-natural-advanced-search",
+  "name": "@quantleaf/twitter-natural-advanced-search",
   "version": "0.0.9",
   "main": "build/inject.js",
   "repository": "",
